@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension for Universal Task Memory
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: academicflow_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: academic_user
+      POSTGRES_PASSWORD: academic_password_secure
+      POSTGRES_DB: academicflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U academic_user -d academicflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis for task queuing and Celery broker
+  redis:
+    image: redis:7.2-alpine
+    container_name: academicflow_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # FastAPI Backend Service
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: academicflow_backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://academic_user:academic_password_secure@postgres:5432/academicflow
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-super-secret-academicflow-jwt-key-for-development}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      MICROSOFT_CLIENT_ID: ${MICROSOFT_CLIENT_ID}
+      MICROSOFT_CLIENT_SECRET: ${MICROSOFT_CLIENT_SECRET}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - generated_docs:/app/generated_docs
+
+  # Celery Background Worker
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: academicflow_worker
+    restart: always
+    command: celery -A app.workers.celery_app.celery_app worker --loglevel=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+asyncpg://academic_user:academic_password_secure@postgres:5432/academicflow
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+    volumes:
+      - ./backend:/app
+      - generated_docs:/app/generated_docs
+
+  # Celery Beat (Scheduled Jobs for Deadline Monitoring)
+  beat:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: academicflow_beat
+    restart: always
+    command: celery -A app.workers.celery_app.celery_app beat --loglevel=info
+    depends_on:
+      redis:
+        condition: service_started
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+
+volumes:
+  postgres_data:
+  redis_data:
+  generated_docs:
