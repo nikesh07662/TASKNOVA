@@ -1,4 +1,4 @@
-# AcademicFlow: Native Android AI Academic Workflow Automation App
+# TASKNOVA: Native Android AI Academic Workflow Automation App
 
 [![Platform](https://img.shields.io/badge/Platform-Native%20Android%20%7C%20Kotlin%20%7C%20Jetpack%20Compose-blue.svg)](https://developer.android.com)
 [![Backend](https://img.shields.io/badge/Backend-FastAPI%20%7C%20Python%203.11%2B%20%7C%20PostgreSQL-green.svg)](https://fastapi.tiangolo.com)
