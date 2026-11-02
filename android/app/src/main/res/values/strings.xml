@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">AcademicFlow</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_assistant">AI Assistant</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_cloud">Cloud</string>
+    <string name="nav_activity">Activity</string>
+    <string name="settings">Settings</string>
+</resources>

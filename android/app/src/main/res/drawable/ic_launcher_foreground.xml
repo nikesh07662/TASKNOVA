@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Academic Graduation Cap / Automation Sparkle icon -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,26 L18,44 L54,62 L90,44 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M30,55 L30,75 C30,86 54,92 54,92 C54,92 78,86 78,75 L78,55 L54,67 Z" />
+</vector>
