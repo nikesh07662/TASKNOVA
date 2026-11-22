@@ -35,7 +35,7 @@ class DeadlineMonitor:
         subject = assignment.get("subject", "Course")
         has_file = bool(assignment.get("matched_document_id"))
 
-        if 0 < hours_remaining <= 3:
+        if 0 <= hours_remaining <= 3:
             notifications.append({
                 "severity": "URGENT",
                 "title": f"3 Hours Remaining: {subject}",
@@ -49,13 +49,21 @@ class DeadlineMonitor:
                 "message": f"\"{title}\" is due tomorrow. Please review the solution document.",
                 "action": "REVIEW_PREVIEW"
             })
-        elif 24 < hours_remaining <= 48 and not has_file:
-            notifications.append({
-                "severity": "WARNING",
-                "title": f"Missing Document Alert: {subject}",
-                "message": f"\"{title}\" is due in 2 days but no completed report was detected. Use AI Doc Gen to prepare one now.",
-                "action": "GENERATE_DOC"
-            })
+        elif 24 < hours_remaining <= 48:
+            if not has_file:
+                notifications.append({
+                    "severity": "WARNING",
+                    "title": f"Missing Document Alert: {subject}",
+                    "message": f"\"{title}\" is due in 2 days but no completed report was detected. Use AI Doc Gen to prepare one now.",
+                    "action": "GENERATE_DOC"
+                })
+            else:
+                notifications.append({
+                    "severity": "INFO",
+                    "title": f"Upcoming 48h Deadline: {subject}",
+                    "message": f"\"{title}\" is due in 2 days. Attached document is ready for review.",
+                    "action": "REVIEW_PREVIEW"
+                })
         elif 48 < hours_remaining <= 72:
             notifications.append({
                 "severity": "INFO",

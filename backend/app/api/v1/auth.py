@@ -49,10 +49,10 @@ async def login(req: UserLogin, db: AsyncSession = Depends(get_db)):
         else:
             raise HTTPException(status_code=400, detail="Incorrect email or password.")
     elif not verify_password(req.password_hash, user.hashed_password):
-        # If user exists from demo seed or reset, update hash to match
-        user.hashed_password = get_password_hash(req.password_hash)
-        await db.commit()
-        await db.refresh(user)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password."
+        )
 
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)

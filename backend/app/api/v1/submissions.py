@@ -71,19 +71,10 @@ async def confirm_submission(
     res = await db.execute(stmt)
     sub = res.scalars().first()
     if not sub:
-        # Fallback for dynamic mock submissions
-        sub = Submission(
-            id=req.submission_id,
-            user_id=user.id,
-            assignment_id="asgn_dbms_lab4",
-            document_id="doc_dbms_1",
-            document_name="DBMS_Practical_Guide.pdf",
-            destination_platform="GOOGLE_CLASSROOM",
-            stage="PREPARED_FOR_REVIEW",
-            idempotency_token=req.idempotency_token
+        raise HTTPException(
+            status_code=404,
+            detail="Submission record not found. Please prepare the submission before confirmation."
         )
-        db.add(sub)
-        await db.commit()
 
     try:
         token = user.google_access_token if sub.destination_platform == "GOOGLE_CLASSROOM" else user.microsoft_access_token
@@ -104,7 +95,10 @@ async def confirm_submission(
         sub.submitted_at = datetime.now(timezone.utc)
 
         # Update assignment status
-        assign_stmt = select(Assignment).where(Assignment.id == sub.assignment_id)
+        assign_stmt = select(Assignment).where(
+            Assignment.id == sub.assignment_id,
+            Assignment.user_id == user.id
+        )
         assign_res = await db.execute(assign_stmt)
         assignment = assign_res.scalars().first()
         if assignment:

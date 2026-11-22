@@ -1,3 +1,4 @@
+import json
 import httpx
 from typing import List, Dict, Any, Optional
 
@@ -106,7 +107,7 @@ class GoogleDriveConnector:
         async with httpx.AsyncClient() as client:
             metadata = {"name": name, "mimeType": mime_type}
             files = {
-                "metadata": (None, str(metadata), "application/json; charset=UTF-8"),
+                "metadata": (None, json.dumps(metadata), "application/json; charset=UTF-8"),
                 "file": (name, content, mime_type)
             }
             response = await client.post(self.UPLOAD_URL, headers={"Authorization": f"Bearer {self.access_token}"}, files=files)

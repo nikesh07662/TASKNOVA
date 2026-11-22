@@ -1,4 +1,5 @@
 import json
+import re
 import logging
 from typing import Dict, Any, List, Optional
 from app.core.config import settings
@@ -86,8 +87,7 @@ class AIService:
         ]
         cleaned = prompt
         for pattern in blacklisted_injection_patterns:
-            if pattern in cleaned.lower():
-                cleaned = cleaned.replace(pattern, "[FILTERED_ATTEMPT]")
+            cleaned = re.sub(re.escape(pattern), "[FILTERED_ATTEMPT]", cleaned, flags=re.IGNORECASE)
         return cleaned
 
     def _generate_intelligent_fallback(self, prompt: str, model: str, context: Optional[List[str]]) -> str:

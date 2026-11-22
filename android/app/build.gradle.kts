@@ -24,10 +24,11 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("release.keystore")
-            storePassword = "academic_secure_keystore_pass"
-            keyAlias = "academicflow_release"
-            keyPassword = "academic_secure_keystore_pass"
+            val keystorePath = System.getenv("KEYSTORE_FILE") ?: "release.keystore"
+            storeFile = file(keystorePath)
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "academic_secure_keystore_pass"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "academicflow_release"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "academic_secure_keystore_pass"
         }
     }
 

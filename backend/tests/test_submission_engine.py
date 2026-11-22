@@ -60,3 +60,20 @@ async def test_idempotency_duplicate_submission_blocked():
             assignment_id=prepared.assignment_id,
             document_id=prepared.document_id
         )
+
+def test_deadline_monitor_handles_zero_and_future_with_file():
+    from app.services.deadline_monitor import deadline_monitor
+    from datetime import datetime, timezone, timedelta
+
+    # 36 hours remaining with file attached
+    future_36h = (datetime.now(timezone.utc) + timedelta(hours=36)).isoformat()
+    assignment = {
+        "title": "Algorithms HW",
+        "subject": "CS201",
+        "deadline": future_36h,
+        "matched_document_id": "doc_123",
+        "status": "PREPARED"
+    }
+    alerts = deadline_monitor.evaluate_assignment(assignment)
+    assert len(alerts) >= 1
+    assert alerts[0]["severity"] == "INFO"

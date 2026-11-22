@@ -1,5 +1,5 @@
 import json
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from app.services.ai_service import ai_service
 from app.schemas.ai import ToolExecutionInfoSchema
 
@@ -17,9 +17,10 @@ class AIAgent:
         prompt: str,
         model: str,
         user_id: str,
-        context_files: List[str] = []
+        context_files: Optional[List[str]] = None
     ) -> Tuple[str, List[ToolExecutionInfoSchema], Dict[str, Any]]:
         tool_executions: List[ToolExecutionInfoSchema] = []
+        context_files = context_files or []
         lower = prompt.lower()
         metadata: Dict[str, Any] = {}
 

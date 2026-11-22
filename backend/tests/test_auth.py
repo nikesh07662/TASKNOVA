@@ -16,3 +16,9 @@ def test_jwt_token_generation_and_decode():
     payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
     assert payload["sub"] == user_id
     assert "exp" in payload
+
+def test_password_verification_rejects_incorrect():
+    raw_pass = "CorrectPassword123"
+    hashed = get_password_hash(raw_pass)
+    assert verify_password("WrongPassword123", hashed) is False
+    assert verify_password("", hashed) is False
