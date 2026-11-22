@@ -188,12 +188,22 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Step 2: Build the Android Application
 
-#### Generate Debug APK
+#### Prerequisites
+Ensure `JAVA_HOME` (JDK 17) and `ANDROID_HOME` are set in your environment:
 ```powershell
+# Example environment setup (adjust to your local paths):
+# $env:JAVA_HOME = "C:\Program Files\Java\jdk-17"
+# $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
+```
+
+#### Generate Debug APK
+```bash
 cd android
-$env:JAVA_HOME = "C:\Users\nikes\AndroidDevTools\jdk17"
-$env:ANDROID_HOME = "C:\Users\nikes\AndroidDevTools\android-sdk"
-& "C:\Users\nikes\AndroidDevTools\gradle-8.5\bin\gradle.bat" assembleDebug
+# Windows:
+.\gradlew.bat assembleDebug
+
+# Linux/macOS:
+./gradlew assembleDebug
 ```
 The compiled debug APK will be generated at:
 `android/app/build/outputs/apk/debug/app-debug.apk`
@@ -204,8 +214,12 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
 #### Generate Signed Release App Bundle (AAB) & APK
-```powershell
-& "C:\Users\nikes\AndroidDevTools\gradle-8.5\bin\gradle.bat" bundleRelease assembleRelease
+```bash
+# Windows:
+.\gradlew.bat bundleRelease assembleRelease
+
+# Linux/macOS:
+./gradlew bundleRelease assembleRelease
 ```
 Artifacts generated:
 - Release AAB: `android/app/build/outputs/bundle/release/app-release.aab`
@@ -218,22 +232,23 @@ Artifacts generated:
 ### Run Backend Test Suite (Pytest)
 ```bash
 cd backend
-$env:PYTHONPATH = "backend"
-& "backend/venv/Scripts/pytest.exe" tests/ -v
+pytest tests/ -v
 ```
 **Results**:
-- `test_auth.py`: Password hashing and JWT encoding/decoding passed.
-- `test_ai_agent.py`: Tool calling, context queries, and prompt injection filters passed.
-- `test_submission_engine.py`: Explicit student command enforcement and idempotency protection passed.
-- `test_attendance.py`: Percentage calculations and shortage recovery math passed.
-- `test_connectors.py`: Google Classroom, MS Teams, Drive, and OneDrive wrappers passed.
+- `test_auth.py`: Password hashing, JWT encoding/decoding, and failed auth rejection.
+- `test_ai_agent.py`: Tool calling, context queries, and prompt injection filters (including case-insensitive sanitization).
+- `test_submission_engine.py`: Explicit student command enforcement and idempotency protection.
+- `test_attendance.py`: Percentage calculations and shortage recovery math.
+- `test_connectors.py`: Google Classroom, MS Teams, Drive, and OneDrive wrappers.
 
 ### Run Android Unit Test Suite (JUnit + Gradle)
-```powershell
+```bash
 cd android
-$env:JAVA_HOME = "C:\Users\nikes\AndroidDevTools\jdk17"
-$env:ANDROID_HOME = "C:\Users\nikes\AndroidDevTools\android-sdk"
-& "C:\Users\nikes\AndroidDevTools\gradle-8.5\bin\gradle.bat" testDebugUnitTest
+# Windows:
+.\gradlew.bat testDebugUnitTest
+
+# Linux/macOS:
+./gradlew testDebugUnitTest
 ```
 **Results**:
 - `AttendanceCalculationTest`: Verified 75% target thresholds, shortage alerts, and lecture projections.

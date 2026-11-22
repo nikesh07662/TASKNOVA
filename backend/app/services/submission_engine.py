@@ -1,7 +1,7 @@
 import json
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.connectors.google_classroom import GoogleClassroomConnector
 from app.connectors.microsoft_teams import MicrosoftTeamsConnector
 from app.schemas.submission import PreparedSubmissionOut, SubmissionAuditLogSchema, SubmissionResultResponse
@@ -63,7 +63,7 @@ class CommandAuthorizedSubmissionEngine:
         destination_platform: str,
         assignment_id: str,
         document_id: str,
-        access_token: str = None
+        access_token: Optional[str] = None
     ) -> SubmissionResultResponse:
         # 1. Mandatory Security Check: Student command verification
         if not student_command or len(student_command.strip()) < 3:

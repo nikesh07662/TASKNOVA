@@ -47,34 +47,49 @@ class SubmissionViewModel(
                 val docId = assignment.matchedDocumentId ?: "doc_default_${UUID.randomUUID()}"
                 val docName = assignment.matchedDocumentName ?: "${assignment.subject}_Final_Report.pdf"
 
-                // Create initial prepared submission state
-                val prepared = PreparedSubmission(
-                    submissionId = "sub_${UUID.randomUUID().toString().take(8)}",
-                    assignmentId = assignment.id,
-                    assignmentTitle = assignment.title,
-                    subject = assignment.subject,
-                    destinationPlatform = assignment.platform,
-                    documentId = docId,
-                    documentName = docName,
-                    documentSizeFormatted = "248 KB",
-                    documentPreviewSnippet = "TITLE: ${assignment.title}\nSUBJECT: ${assignment.subject}\nSTATUS: Verified & Formatted with LaTeX Math & Academic Citations.\nREADY FOR PLATFORM DISPATCH.",
-                    deadline = assignment.deadline,
-                    stage = SubmissionStage.PREPARED_FOR_REVIEW,
-                    idempotencyToken = UUID.randomUUID().toString(),
-                    auditTrail = listOf(
-                        SubmissionAuditLog(
-                            timestamp = Instant.now().toString(),
-                            actor = "AI_AGENT",
-                            action = "PREPARED_DOCUMENT",
-                            details = "Matched instructions with $docName. File format validated."
-                        )
-                    )
-                )
-
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    preparedSubmission = prepared
-                )
+                submissionRepository.prepareSubmission(assignment.id, docId).collect { result ->
+                    when (result) {
+                        is NetworkResult.Loading -> {
+                            _uiState.value = _uiState.value.copy(isLoading = true)
+                        }
+                        is NetworkResult.Success -> {
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                preparedSubmission = result.data,
+                                errorMessage = null
+                            )
+                        }
+                        is NetworkResult.Error -> {
+                            // Fallback to local prepared state if offline
+                            val prepared = PreparedSubmission(
+                                submissionId = "sub_${UUID.randomUUID().toString().take(8)}",
+                                assignmentId = assignment.id,
+                                assignmentTitle = assignment.title,
+                                subject = assignment.subject,
+                                destinationPlatform = assignment.platform,
+                                documentId = docId,
+                                documentName = docName,
+                                documentSizeFormatted = "248 KB",
+                                documentPreviewSnippet = "TITLE: ${assignment.title}\nSUBJECT: ${assignment.subject}\nSTATUS: Verified & Formatted with LaTeX Math & Academic Citations.\nREADY FOR PLATFORM DISPATCH.",
+                                deadline = assignment.deadline,
+                                stage = SubmissionStage.PREPARED_FOR_REVIEW,
+                                idempotencyToken = UUID.randomUUID().toString(),
+                                auditTrail = listOf(
+                                    SubmissionAuditLog(
+                                        timestamp = Instant.now().toString(),
+                                        actor = "AI_AGENT",
+                                        action = "PREPARED_DOCUMENT",
+                                        details = "Matched instructions with $docName. File format validated."
+                                    )
+                                )
+                            )
+                            _uiState.value = _uiState.value.copy(
+                                isLoading = false,
+                                preparedSubmission = prepared
+                            )
+                        }
+                    }
+                }
             } else {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

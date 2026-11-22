@@ -1,8 +1,12 @@
 import os
+import re
 import uuid
+import logging
 from typing import Dict, Any, Optional
 from fpdf import FPDF
 from app.services.ai_service import ai_service
+
+logger = logging.getLogger(__name__)
 
 class AcademicDocumentGenerator:
     """
@@ -40,8 +44,9 @@ class AcademicDocumentGenerator:
             system_instruction="You are an academic documentation specialist. Generate thorough, well-formatted reports."
         )
 
-        # Generate PDF file
-        pdf_filename = f"{title.replace(' ', '_')}_{doc_id[:6]}.pdf"
+        # Generate PDF file with sanitized filename
+        safe_title = re.sub(r"[^\w\-_.]", "_", title).strip("_") or "Document"
+        pdf_filename = f"{safe_title}_{doc_id[:6]}.pdf"
         output_dir = os.path.join(os.getcwd(), "generated_docs")
         os.makedirs(output_dir, exist_ok=True)
         pdf_path = os.path.join(output_dir, pdf_filename)
@@ -49,7 +54,8 @@ class AcademicDocumentGenerator:
         try:
             self._render_pdf(title, subject, content_markdown, pdf_path)
             has_pdf = True
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to render PDF for '{title}': {e}")
             has_pdf = False
 
         return {
@@ -82,7 +88,7 @@ class AcademicDocumentGenerator:
                 pdf.cell(0, 8, text=line.replace("#", "").strip()[:80], new_x="LMARGIN", new_y="NEXT")
                 pdf.set_font("Helvetica", "", 10)
             else:
-                pdf.multi_cell(0, 6, text=line[:200])
+                pdf.multi_cell(0, 6, text=line)
 
         pdf.output(out_path)
 

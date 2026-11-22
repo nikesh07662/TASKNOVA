@@ -18,26 +18,22 @@ object ApiClient {
         encodeDefaults = true
     }
 
-    const val LAN_FALLBACK_IP = "192.168.1.34"
-
     fun create(baseUrl: String, secureStorage: SecureStorage): ApiService {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         }
 
         // Smart fallback interceptor:
-        // Tries USB reverse connection (127.0.0.1) or emulator (10.0.2.2).
-        // If connection fails, automatically routes to host PC's Wi-Fi LAN IP (192.168.1.34).
+        // Automatically redirects 127.0.0.1 / localhost to the Android emulator host gateway (10.0.2.2) if local connection fails.
         val smartFallbackInterceptor = Interceptor { chain ->
             val request = chain.request()
             try {
                 chain.proceed(request)
             } catch (e: IOException) {
                 val host = request.url.host
-                if (host == "127.0.0.1" || host == "localhost" || host == "10.0.2.2") {
+                if (host == "127.0.0.1" || host == "localhost") {
                     val fallbackUrl = request.url.newBuilder()
-                        .host(LAN_FALLBACK_IP)
-                        .port(8000)
+                        .host("10.0.2.2")
                         .build()
                     val newRequest = request.newBuilder().url(fallbackUrl).build()
                     try {

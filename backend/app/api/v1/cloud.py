@@ -1,4 +1,5 @@
 import os
+import re
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -104,8 +105,21 @@ async def upload_file(
     return CloudFileOut.model_validate(cloud_record)
 
 @router.get("/docs/{filename}")
-async def serve_pdf(filename: str):
-    file_path = os.path.join(os.getcwd(), "generated_docs", filename)
+async def serve_pdf(
+    filename: str,
+    user: User = Depends(get_current_user)
+):
+    # Sanitize and validate filename to prevent directory traversal
+    safe_name = os.path.basename(filename)
+    if not re.match(r"^[a-zA-Z0-9_\-\.]+\.pdf$", safe_name) or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename format.")
+
+    output_dir = os.path.realpath(os.path.join(os.getcwd(), "generated_docs"))
+    file_path = os.path.realpath(os.path.join(output_dir, safe_name))
+
+    if not file_path.startswith(output_dir + os.sep):
+        raise HTTPException(status_code=403, detail="Access denied.")
+
     if os.path.exists(file_path):
-        return FileResponse(file_path, media_type="application/pdf", filename=filename)
+        return FileResponse(file_path, media_type="application/pdf", filename=safe_name)
     raise HTTPException(status_code=404, detail="Document file not found.")

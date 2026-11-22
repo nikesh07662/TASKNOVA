@@ -86,6 +86,15 @@ class MicrosoftTeamsConnector:
                     "createdDateTime": "2026-10-31T14:00:00Z"
                 }
             ]
+
+        async with httpx.AsyncClient() as client:
+            try:
+                url = f"{self.BASE_URL}/teams/{team_id}/channels/{team_id}/messages"
+                response = await client.get(url, headers=self.headers)
+                if response.status_code == 200:
+                    return response.json().get("value", [])
+            except Exception:
+                pass
         return []
 
     async def submit_assignment(self, class_id: str, assignment_id: str, submission_id: str) -> Dict[str, Any]:
